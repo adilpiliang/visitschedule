@@ -13,7 +13,6 @@ class School extends Model
         'name',
         'kota',
         'kecamatan',
-        'kelurahan',
         'address',
         'maps',
         'contact',

@@ -8,16 +8,16 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('schools', function (Blueprint $table) {
-            $table->id(); // ID
-            $table->string('name'); // Name
-            $table->string('kota'); // Kota
-            $table->string('kecamatan'); // Kecamatan
-            $table->string('kelurahan'); // Kelurahan 
-            $table->text('address'); // Address
-            $table->string('maps')->nullable(); // Maps (link Google Maps, optional)
-            $table->string('contact')->nullable(); // Contact (telepon/email, optional)
-            $table->enum('status', ['active', 'inactive'])->default('active'); // Status
-            $table->string('pic')->nullable(); // PIC (penanggung jawab)
+            $table->id();
+            $table->string('name')->unique(); // ← tambahkan unique
+            $table->string('kota');
+            $table->string('kecamatan');
+            $table->string('kelurahan');
+            $table->text('address');
+            $table->string('maps')->nullable();
+            $table->string('contact')->nullable();
+            $table->enum('status', ['pending', 'onprogress'])->default('pending');
+            $table->string('pic')->nullable();
             $table->timestamps();
         });
     }

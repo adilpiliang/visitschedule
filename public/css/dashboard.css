@@ -126,11 +126,13 @@
     min-width: 210px;
     background: #fff;
     border-radius: 18px;
+    border: 1px solid transparent;
     padding: 20px 22px;
     box-shadow: 0 28px 60px -40px rgba(15, 23, 42, 0.5);
     display: flex;
     flex-direction: column;
     gap: 12px;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .card h3 {
@@ -147,8 +149,32 @@
 
 .card span {
     font-size: 0.85rem;
-    color: #10b981;
-    font-weight: 600;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.cards-selectable {
+    gap: 20px;
+}
+
+.card-selectable {
+    text-decoration: none;
+    color: inherit;
+}
+
+.card-selectable:hover {
+    border-color: #2563eb;
+    box-shadow: 0 24px 48px -30px rgba(37, 99, 235, 0.6);
+    transform: translateY(-2px);
+}
+
+.card-selectable.is-active {
+    border-color: #2563eb;
+    box-shadow: 0 26px 52px -30px rgba(37, 99, 235, 0.65);
+}
+
+.card-summary {
+    border-style: dashed;
 }
 
 .panels {
@@ -276,6 +302,354 @@
     opacity: 0.85;
 }
 
+.calendar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.calendar-pill-btn {
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.calendar-pill-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.calendar-nav {
+    display: inline-flex;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.calendar-icon-btn {
+    border: none;
+    background: transparent;
+    color: #1f2937;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.calendar-icon-btn:hover {
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.calendar-app {
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 20px 40px -28px rgba(15, 23, 42, 0.25);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.calendar-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.calendar-toolbar-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.calendar-toolbar-subtitle {
+    font-size: 0.95rem;
+    color: #6b7280;
+}
+
+.calendar-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+}
+
+.calendar-weekday {
+    padding: 8px;
+    text-align: right;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    min-height: 620px;
+}
+
+.calendar-cell {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #f9fafb;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.calendar-cell:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 12px 20px -16px rgba(79, 70, 229, 0.4);
+}
+
+.calendar-cell.is-outside {
+    background: #f3f4f6;
+    color: #9ca3af;
+}
+
+.calendar-cell.is-today {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+.calendar-cell-header {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.calendar-cell-day {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.calendar-events {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.calendar-event {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.08);
+    border-left: 3px solid var(--event-color, #6366f1);
+    color: #1f2937;
+}
+
+.calendar-event-dot {
+    display: inline-flex;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.calendar-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calendar-event-more {
+    font-size: 0.75rem;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.calendar-event-placeholder {
+    flex: 1;
+}
+
+.table-section {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(15, 34, 58, 0.08);
+    padding: 20px;
+}
+
+.table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.toolbar-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.toolbar-heading h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.toolbar-subtitle {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.toolbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    cursor: pointer;
+    font-weight: 600;
+    color: #1f2937;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.dropdown-button:hover {
+    border-color: #2563eb;
+    box-shadow: 0 12px 26px -18px rgba(37, 99, 235, 0.55);
+    transform: translateY(-1px);
+}
+
+.dropdown-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 220px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 18px 40px -20px rgba(15, 23, 42, 0.45);
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    z-index: 20;
+}
+
+.dropdown.is-open .dropdown-menu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    padding: 10px 16px;
+    font-size: 0.92rem;
+    color: #1f2937;
+    text-decoration: none;
+    display: block;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.dropdown-item:hover {
+    background: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
+}
+
+.dropdown-item.is-active {
+    background: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+.dropdown-item.is-disabled {
+    color: #9ca3af;
+    cursor: default;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.data-table thead th {
+    text-align: left;
+    padding: 12px;
+    background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+}
+
+.data-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+}
+
+.data-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    text-transform: capitalize;
+    background: #e0e7ff;
+    color: #1e40af;
+}
+
+.contact-link {
+    color: #1e40af;
+    text-decoration: underline;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 24px;
+    color: #6b7280;
+}
+
 @media (max-width: 1024px) {
     .layout {
         flex-direction: column;
@@ -311,6 +685,19 @@
         padding: 28px;
     }
 
+    .table-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .calendar-grid {
+        min-height: auto;
+    }
+
+    .calendar-cell {
+        min-height: 120px;
+    }
+
     .panels {
         grid-template-columns: 1fr;
     }
@@ -323,6 +710,27 @@
 
     .cards {
         grid-template-columns: 1fr;
+    }
+
+    .dropdown-menu {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        top: auto;
+        bottom: 16px;
+        transform: translateY(20px);
+    }
+
+    .dropdown.is-open .dropdown-menu {
+        transform: translateY(0);
+    }
+
+    .calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .calendar-weekdays {
+        display: none;
     }
 
     .panel {

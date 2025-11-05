@@ -23,8 +23,8 @@ $navItems = [
         ],
         [
         'label' => 'Sekolah',
-        'route' => 'school',
-        'match' => ['school'],
+        'route' => 'schools.index',
+        'match' => ['schools.*'],
         'icon' => <<<'SVG'
             <svg viewBox="0 0 24 24" fill="none">
             <path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
@@ -48,7 +48,7 @@ $navItems = [
 
                 <aside class="sidebar">
                     <div class="brand">
-                        My<span>Schedule</span>
+                        SchoolVisit<br><span>Schedule</span>
                     </div>
                     <div class="nav-group">
                         <div class="nav-label">Menu</div>
