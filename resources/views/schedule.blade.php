@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ config('app.name', 'Dashboard') }}</title>
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
@@ -44,6 +45,21 @@
             </main>
         </div>
 
+        <div class="modal-overlay" data-calendar-detail-modal>
+            <div class="modal-window modal-calendar-window" role="dialog" aria-modal="true" aria-labelledby="calendar-detail-title">
+                <div class="modal-header">
+                    <div>
+                        <p class="modal-label">Jadwal tanggal</p>
+                        <h2 id="calendar-detail-title" class="modal-title" data-calendar-detail-title>--</h2>
+                    </div>
+                    <button class="modal-close" type="button" data-calendar-detail-close aria-label="Tutup">&times;</button>
+                </div>
+                <div class="calendar-detail-list" data-calendar-detail-body>
+                    <p class="empty-state">Tidak ada jadwal pada tanggal ini.</p>
+                </div>
+            </div>
+        </div>
+
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const app = document.getElementById('calendar-app');
@@ -57,48 +73,11 @@
                 const gridEl = app.querySelector('[data-calendar-grid]');
                 const actionButtons = document.querySelectorAll('[data-calendar-action]');
 
-                const events = [
-                    {
-                        id: 1,
-                        title: 'Sosialisasi Kurikulum Merdeka',
-                        school: 'SMA Negeri 1 Bandung',
-                        start: '2025-02-10T09:00:00+07:00',
-                        end: '2025-02-10T11:00:00+07:00',
-                        color: '#6366f1',
-                    },
-                    {
-                        id: 2,
-                        title: 'Monitoring Literasi Digital',
-                        school: 'SMP Negeri 2 Bandung',
-                        start: '2025-02-14T08:30:00+07:00',
-                        end: '2025-02-14T10:30:00+07:00',
-                        color: '#0ea5e9',
-                    },
-                    {
-                        id: 3,
-                        title: 'Audiensi Program Vokasi',
-                        school: 'SMK Negeri 5 Bandung',
-                        start: '2025-02-21T13:00:00+07:00',
-                        end: '2025-02-21T15:00:00+07:00',
-                        color: '#22c55e',
-                    },
-                    {
-                        id: 4,
-                        title: 'Rapat Koordinasi Ketua Sekolah',
-                        school: 'Kantor Cabang Dinas',
-                        start: '2025-02-21T16:00:00+07:00',
-                        end: '2025-02-21T17:00:00+07:00',
-                        color: '#f97316',
-                    },
-                    {
-                        id: 5,
-                        title: 'Pelatihan Guru BK',
-                        school: 'SMA Negeri 4 Bandung',
-                        start: '2025-02-28T09:30:00+07:00',
-                        end: '2025-02-28T12:00:00+07:00',
-                        color: '#8b5cf6',
-                    },
-                ];
+                const events = @json($events ?? []);
+                const csrfToken = '{{ csrf_token() }}';
+                const detailModal = document.querySelector('[data-calendar-detail-modal]');
+                const detailBody = detailModal ? detailModal.querySelector('[data-calendar-detail-body]') : null;
+                const detailTitle = detailModal ? detailModal.querySelector('[data-calendar-detail-title]') : null;
 
                 const weekdayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                 let viewDate = new Date();
@@ -128,6 +107,16 @@
                     return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 };
 
+                const fullDateLabel = (dateKey) => {
+                    const date = new Date(dateKey);
+                    return date.toLocaleDateString('id-ID', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                    });
+                };
+
                 const eventsByDate = events.reduce((acc, event) => {
                     const key = event.start.split('T')[0];
                     const bucket = acc.get(key) ?? [];
@@ -136,6 +125,69 @@
                     acc.set(key, bucket);
                     return acc;
                 }, new Map());
+
+                const renderDetailItems = (dateKey, dayEvents) => {
+                    if (!detailBody || !detailModal || !detailTitle) {
+                        return;
+                    }
+
+                    if (!dayEvents.length) {
+                        detailBody.innerHTML = '<p class="empty-state">Tidak ada jadwal pada tanggal ini.</p>';
+                    } else {
+                        detailBody.innerHTML = dayEvents.map((event) => {
+                            const timeLabel = extractTimeLabel(event.start);
+                            const notes = event.notes ? `<p class="calendar-detail-notes">${event.notes}</p>` : '';
+                            const picValue = typeof event.pic === 'string' ? event.pic.trim() : '';
+                            const picInfo = `<p class="calendar-detail-meta">Penanggung Jawab: ${picValue !== '' ? picValue : '-'}</p>`;
+                            const action = event.status === 'completed'
+                                ? '<span class="badge badge-status badge-status-completed">Selesai</span>'
+                                : `
+                                    <form method="POST" action="${event.complete_url}" class="calendar-complete-form">
+                                        <input type="hidden" name="_token" value="${csrfToken}">
+                                        <input type="hidden" name="_method" value="PATCH">
+                                        <button type="submit" class="button-primary button-small">Selesaikan</button>
+                                    </form>
+                                  `;
+
+                            return `
+                                <article class="calendar-detail-item">
+                                    <div class="calendar-detail-info">
+                                        <h3>${event.school}</h3>
+                                        <p>${timeLabel} • ${event.title}</p>
+                                        ${picInfo}
+                                        ${notes}
+                                    </div>
+                                    <div class="calendar-detail-action">
+                                        ${action}
+                                    </div>
+                                </article>
+                            `;
+                        }).join('');
+                    }
+
+                    detailTitle.textContent = fullDateLabel(dateKey);
+                    detailModal.classList.add('is-visible');
+                };
+
+                const closeDetailModal = () => {
+                    if (detailModal) {
+                        detailModal.classList.remove('is-visible');
+                    }
+                };
+
+                if (detailModal) {
+                    detailModal.addEventListener('click', (event) => {
+                        if (event.target === detailModal || event.target.closest('[data-calendar-detail-close]')) {
+                            closeDetailModal();
+                        }
+                    });
+
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape' && detailModal.classList.contains('is-visible')) {
+                            closeDetailModal();
+                        }
+                    });
+                }
 
                 const renderWeekdays = () => {
                     weekdaysEl.innerHTML = weekdayNames
@@ -210,6 +262,9 @@
                             const placeholder = document.createElement('div');
                             placeholder.className = 'calendar-event-placeholder';
                             eventWrapper.appendChild(placeholder);
+                        } else {
+                            cell.classList.add('has-events');
+                            cell.addEventListener('click', () => renderDetailItems(cellKey, dayEvents));
                         }
 
                         cell.appendChild(eventWrapper);
@@ -237,3 +292,4 @@
         </script>
     </body>
 </html>
+

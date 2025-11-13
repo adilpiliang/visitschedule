@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\School;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,19 +13,20 @@ use Illuminate\Support\Str;
 class SchoolController extends Controller
 {
     private const DEFAULT_SCOPE = 'kota-bogor';
+    private const PIC_OPTIONS = ['Tim Hasan', 'Tim Dwie', 'Tim Fahmi','Tim Gabungan'];
 
     private const SCOPE_CONFIG = [
         'kota-bogor' => [
             'label' => 'Kota Bogor',
             'description' => 'Pilih kecamatan untuk melihat data sekolah',
-            'table_description' => 'Filter berdasarkan kecamatan di Kota Bogor.',
+            'table_description' => 'Gunakan filter kecamatan untuk melihat data spesifik.',
             'stat_label' => 'Kecamatan',
             'kota_matches' => ['kota bogor'],
             'show_dropdown' => true,
         ],
         'kabupaten-bogor' => [
             'label' => 'Kabupaten Bogor',
-            'description' => 'Data sekolah yang terdaftar di Kabupaten Bogor',
+            'description' => 'Pilih kecamatan untuk melihat data sekolah',
             'table_description' => 'Gunakan filter kecamatan untuk melihat data spesifik.',
             'stat_label' => 'Kecamatan',
             'kota_matches' => ['kabupaten bogor'],
@@ -63,7 +65,9 @@ class SchoolController extends Controller
             $filters['kecamatan'] = '';
         }
 
-        $query = School::query();
+        $query = School::query()
+            ->withCount('schedules')
+            ->with('latestSchedule');
         $this->applyScope($query, $scope);
 
         if ($filters['search'] !== '') {
@@ -86,7 +90,7 @@ class SchoolController extends Controller
             $query->whereRaw('LOWER(TRIM(kecamatan)) = ?', [Str::lower($filters['kecamatan'])]);
         }
 
-        $schools = $query->orderBy('name')->get();
+        $schools = $this->enrichSchools($query->orderBy('name')->get());
         $kecamatanOptions = $scopeConfig['show_dropdown'] ? $this->buildKecamatanOptions($scope) : collect();
 
         if ($request->expectsJson()) {
@@ -94,6 +98,7 @@ class SchoolController extends Controller
         }
 
         $cards = $this->buildCardStats($scope, $filters);
+        $routeBuilder = $this->makeRouteBuilder($filters);
 
         return view('school', [
             'schools' => $schools,
@@ -105,7 +110,41 @@ class SchoolController extends Controller
             'currentScopeLabel' => $scopeConfig['label'],
             'tableDescription' => $scopeConfig['table_description'],
             'showKecamatanDropdown' => $scopeConfig['show_dropdown'],
+            'selectedKecamatan' => $filters['kecamatan'] ?? '',
+            'routeBuilder' => $routeBuilder,
+            'picOptions' => self::PIC_OPTIONS,
+            'oldSchoolName' => $this->resolveOldSchoolName($request, $schools),
+            'openCreateSchoolModal' => $this->shouldOpenCreateSchoolModal(),
         ]);
+    }
+
+    /**
+     * Store a newly created school record.
+     */
+    public function store(Request $request)
+    {
+        $data = $request->validateWithBag('schoolStore', [
+            'name' => ['required', 'string', 'max:255', 'unique:schools,name'],
+            'kota' => ['required', 'string', 'max:255'],
+            'kecamatan' => ['required', 'string', 'max:255'],
+            'kelurahan' => ['nullable', 'string', 'max:255'],
+            'address' => ['required', 'string', 'max:500'],
+            'contact' => ['nullable', 'string', 'max:30'],
+            'maps' => ['nullable', 'string', 'max:500', 'url'],
+        ]);
+
+        School::create([
+            'name' => $this->uppercaseValue($data['name']),
+            'kota' => $this->uppercaseValue($data['kota']),
+            'kecamatan' => $this->uppercaseValue($data['kecamatan']),
+            'kelurahan' => $this->sanitizeNullableString($data['kelurahan'] ?? null),
+            'address' => trim($data['address']),
+            'maps' => $this->sanitizeNullableString($data['maps'] ?? null),
+            'contact' => $this->formatContactNumber($data['contact'] ?? null),
+            'status' => 'baru',
+        ]);
+
+        return back()->with('status', 'Sekolah baru berhasil ditambahkan.');
     }
 
     /**
@@ -135,11 +174,15 @@ class SchoolController extends Controller
             return $this->toJsonResponse($school);
         }
 
+        $school->loadCount('schedules');
+        $school->loadCount('schedules')->load('latestSchedule');
+        $schools = $this->enrichSchools(collect([$school]));
         $kecamatanOptions = $scopeConfig['show_dropdown'] ? $this->buildKecamatanOptions($scope) : collect();
         $cards = $this->buildCardStats($scope, $filters);
+        $routeBuilder = $this->makeRouteBuilder($filters);
 
         return view('school', [
-            'schools' => collect([$school]),
+            'schools' => $schools,
             'filters' => $filters,
             'kecamatanOptions' => $kecamatanOptions,
             'cardStats' => $cards,
@@ -148,13 +191,18 @@ class SchoolController extends Controller
             'currentScopeLabel' => $scopeConfig['label'],
             'tableDescription' => $scopeConfig['table_description'],
             'showKecamatanDropdown' => $scopeConfig['show_dropdown'],
+            'selectedKecamatan' => $filters['kecamatan'] ?? '',
+            'routeBuilder' => $routeBuilder,
+            'picOptions' => self::PIC_OPTIONS,
+            'oldSchoolName' => $this->resolveOldSchoolName($request, $schools),
+            'openCreateSchoolModal' => $this->shouldOpenCreateSchoolModal(),
         ]);
     }
 
     protected function applyScope(Builder $query, string $scope): void
     {
         $config = self::SCOPE_CONFIG[$scope] ?? self::SCOPE_CONFIG[self::DEFAULT_SCOPE];
-        $matches = array_map(static fn ($value) => Str::lower(trim($value)), $config['kota_matches'] ?? []);
+        $matches = array_map(static fn($value) => Str::lower(trim($value)), $config['kota_matches'] ?? []);
 
         if (!empty($matches)) {
             $query->where(function (Builder $inner) use ($matches) {
@@ -180,9 +228,21 @@ class SchoolController extends Controller
         $this->applyScope($query, $scope);
 
         return $query
-            ->distinct()
-            ->orderByRaw('LOWER(TRIM(kecamatan))')
-            ->pluck('kecamatan');
+            ->pluck('kecamatan')
+            ->map(function (?string $value) {
+                $value = trim((string) $value);
+                if ($value === '') {
+                    return null;
+                }
+
+                $value = preg_replace('/\s+/', ' ', $value);
+
+                return Str::title(Str::lower($value));
+            })
+            ->filter()
+            ->unique(fn($value) => Str::lower($value))
+            ->sortBy(fn($value) => Str::lower($value))
+            ->values();
     }
 
     protected function buildCardStats(string $currentScope, array $filters)
@@ -210,6 +270,25 @@ class SchoolController extends Controller
         }
 
         return $cards;
+    }
+
+    protected function makeRouteBuilder(array $filters): Closure
+    {
+        $baseQuery = $this->baseRouteQuery($filters);
+
+        return function (array $overrides = []) use ($baseQuery): array {
+            $query = array_merge($baseQuery, $overrides);
+
+            return array_filter($query, fn($value) => !is_null($value) && $value !== '');
+        };
+    }
+
+    protected function baseRouteQuery(array $filters): array
+    {
+        return collect($filters)
+            ->except(['kecamatan'])
+            ->filter(fn($value) => !is_null($value) && $value !== '')
+            ->all();
     }
 
     protected function calculateScopeStat(string $scope): int
@@ -254,5 +333,105 @@ class SchoolController extends Controller
             'success' => true,
             'data' => $data,
         ]);
+    }
+
+    protected function uppercaseValue(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        return $value === '' ? null : Str::upper($value);
+    }
+
+    protected function sanitizeNullableString(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        return $value === '' ? null : $value;
+    }
+
+    protected function formatContactNumber(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $value);
+        if ($digits === '') {
+            return null;
+        }
+
+        $digits = ltrim($digits, '0');
+        if ($digits === '') {
+            return null;
+        }
+
+        if (Str::startsWith($digits, '62')) {
+            return '62' . substr($digits, 2);
+        }
+
+        if (Str::startsWith($digits, '8')) {
+            return '62' . $digits;
+        }
+
+        return '62' . $digits;
+    }
+
+    protected function shouldOpenCreateSchoolModal(): bool
+    {
+        $errors = session('errors');
+        if (!$errors instanceof \Illuminate\Support\ViewErrorBag) {
+            return false;
+        }
+
+        return $errors->hasBag('schoolStore') && $errors->getBag('schoolStore')->any();
+    }
+
+    protected function resolveOldSchoolName(Request $request, \Illuminate\Support\Collection $schools): ?string
+    {
+        $oldSchoolId = (int) $request->old('school_id', 0);
+        if ($oldSchoolId === 0) {
+            return null;
+        }
+
+        $school = $schools->firstWhere('id', $oldSchoolId) ?? School::find($oldSchoolId);
+
+        return $school?->name;
+    }
+
+    protected function enrichSchools(\Illuminate\Support\Collection $schools): \Illuminate\Support\Collection
+    {
+        return $schools->map(function (School $school) {
+            $school->setAttribute('status_badge_class', $this->statusBadgeClass($school->status));
+            $school->setAttribute('latest_schedule_payload', $this->buildLatestSchedulePayload($school));
+
+            return $school;
+        });
+    }
+
+    protected function statusBadgeClass(?string $status): string
+    {
+        return match (Str::lower(trim((string) $status))) {
+            'baru' => 'badge-status badge-status-new',
+            'pending' => 'badge-status badge-status-pending',
+            'terjadwal' => 'badge-status badge-status-scheduled',
+            'selesai' => 'badge-status badge-status-completed',
+            default => 'badge-status',
+        };
+    }
+
+    protected function buildLatestSchedulePayload(School $school): ?array
+    {
+        $schedule = $school->latestSchedule;
+        if (!$schedule) {
+            return null;
+        }
+
+        return [
+            'school' => $school->name,
+            'visit_date' => $schedule->visit_date,
+            'visit_time' => $schedule->visit_time,
+            'notes' => $schedule->notes,
+            'schedule_id' => $schedule->id,
+            'pic' => $school->pic,
+        ];
     }
 }

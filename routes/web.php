@@ -2,12 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\ScheduleController;
 
 Route::view('/', 'welcome')->name('dashboard');
 Route::get('/schools', [SchoolController::class, 'index'])->name('schools.index');
+Route::post('/schools', [SchoolController::class, 'store'])->name('schools.store');
 Route::get('/schools/{school}', [SchoolController::class, 'show'])->name('schools.show');
 Route::view('/login', 'login')->name('login');
-Route::view('/schedule', 'schedule')->name('schedule');
+Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
+Route::post('/schedule', [ScheduleController::class, 'store'])->name('schedule.store');
+Route::get('/jadwal', [ScheduleController::class, 'list'])->name('schedule.list');
+Route::patch('/schedule/{schedule}/complete', [ScheduleController::class, 'complete'])->name('schedule.complete');
 Route::view('/settings', 'settings')->name('settings');
 
 

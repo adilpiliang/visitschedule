@@ -13,6 +13,7 @@ class School extends Model
         'name',
         'kota',
         'kecamatan',
+        'kelurahan',
         'address',
         'maps',
         'contact',
@@ -23,4 +24,14 @@ class School extends Model
     protected $casts = [
         'status' => 'string',
     ];
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    public function latestSchedule()
+    {
+        return $this->hasOne(Schedule::class)->latestOfMany(['visit_date', 'visit_time']);
+    }
 }

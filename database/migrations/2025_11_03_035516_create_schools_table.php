@@ -10,13 +10,13 @@ return new class extends Migration {
         Schema::create('schools', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique(); // ← tambahkan unique
-            $table->string('kota');
-            $table->string('kecamatan');
-            $table->string('kelurahan');
+            $table->string('kota')->nullable();
+            $table->string('kecamatan')->nullable();
+            $table->string('kelurahan')->nullable();
             $table->text('address');
             $table->string('maps')->nullable();
             $table->string('contact')->nullable();
-            $table->enum('status', ['pending', 'onprogress'])->default('pending');
+            $table->enum('status', ['baru', 'pending', 'terjadwal', 'selesai'])->default('baru');
             $table->string('pic')->nullable();
             $table->timestamps();
         });
