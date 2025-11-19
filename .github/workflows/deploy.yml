@@ -3,18 +3,16 @@ name: Deploy Laravel to Hostinger
 on:
   push:
     branches:
-      - master   # workflow berjalan setiap push ke branch master
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Ambil kode dari repo GitHub
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Siapkan PHP + Composer
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -22,12 +20,10 @@ jobs:
           extensions: mbstring, intl, bcmath, pdo_mysql
           tools: composer
 
-      # 3. Install dependency Laravel (vendor/)
-      - name: Install PHP dependencies (Composer)
+      - name: Install PHP dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      # 4. Build asset frontend (opsional jika pakai Vite/Node/NPM)
-      - name: Build frontend assets (optional)
+      - name: Build frontend assets
         run: |
           if [ -f package.json ]; then
             npm install
@@ -35,7 +31,6 @@ jobs:
             rm -rf node_modules
           fi
 
-      # 5. Deploy ke Hostinger via FTP
       - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -44,12 +39,11 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /public_html/
           local-dir: ./
-
           exclude: |
             **/.git*
             **/.github/**
             **/node_modules/**
-            **/vendor/**                 # <-- INI YANG TERPENTING
+            **/vendor/**
             **/tests/**
             **/storage/logs/**
             **/storage/framework/cache/**
