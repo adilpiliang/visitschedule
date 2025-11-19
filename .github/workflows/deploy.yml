@@ -47,7 +47,8 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }} # diambil dari Secrets
           password: ${{ secrets.FTP_PASSWORD }} # diambil dari Secrets
           server-dir: /public_html/             # folder di Hostinger
-          local-dir: .                          # kirim dari root project
+          local-dir: ./
+                         # kirim dari root project
           exclude: |                            # file/folder yang tidak dikirim
             **/.git*
             **/.github/**
