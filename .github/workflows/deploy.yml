@@ -40,10 +40,6 @@ jobs:
           server-dir: /public_html/
           local-dir: ./
           exclude: |
+            **/.git/**
             **/.git*
             **/.github/**
-            **/node_modules/**
-            **/vendor/**
-            **/tests/**
-            **/storage/logs/**
-            **/storage/framework/cache/**
