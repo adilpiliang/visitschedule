@@ -99,6 +99,7 @@
                     </div>
                     @endif
                 </section>
+                <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -176,6 +177,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
             </section>
         </main>
     </div>
@@ -378,6 +380,11 @@
         </div>
     </div>
 
+    <form method="POST" action="" data-detail-delete-form hidden>
+        @csrf
+        @method('DELETE')
+    </form>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const dropdowns = document.querySelectorAll('[data-dropdown]');
@@ -555,6 +562,13 @@
                 const notesEl = detailModal.querySelector('[data-detail-notes]');
                 const picEl = detailModal.querySelector('[data-detail-pic]');
                 const openDetailButtons = document.querySelectorAll('.schedule-detail-button');
+                const deleteButton = detailModal.querySelector('[data-detail-delete]');
+                const deleteForm = document.querySelector('[data-detail-delete-form]');
+                let currentDetailPayload = null;
+
+                if (deleteButton) {
+                    deleteButton.disabled = true;
+                }
 
                 const formatDate = (date) => {
                     if (!date) {
@@ -585,12 +599,19 @@
                 };
 
                 const openDetailModal = (payload) => {
+                    currentDetailPayload = payload;
                     nameEl.textContent = payload.school || 'Nama sekolah tidak tersedia';
                     dateEl.textContent = formatDate(payload.visit_date);
                     timeEl.textContent = formatTime(payload.visit_time);
                     notesEl.textContent = payload.notes && payload.notes.trim() !== '' ? payload.notes : '-';
                     if (picEl) {
                         picEl.textContent = formatPic(payload.pic);
+                    }
+                    if (deleteForm) {
+                        deleteForm.action = payload.delete_url || '';
+                    }
+                    if (deleteButton) {
+                        deleteButton.disabled = !payload.delete_url;
                     }
                     detailModal.classList.add('is-visible');
                 };
@@ -601,6 +622,13 @@
                 });
 
                 const closeDetailModal = () => {
+                    currentDetailPayload = null;
+                    if (deleteForm) {
+                        deleteForm.action = '';
+                    }
+                    if (deleteButton) {
+                        deleteButton.disabled = true;
+                    }
                     detailModal.classList.remove('is-visible');
                 };
 
@@ -615,6 +643,20 @@
                         closeDetailModal();
                     }
                 });
+
+                if (deleteButton && deleteForm) {
+                    deleteButton.addEventListener('click', () => {
+                        if (!currentDetailPayload || !currentDetailPayload.delete_url) {
+                            return;
+                        }
+                        const confirmMessage = currentDetailPayload.school
+                            ? `Hapus jadwal kunjungan ke ${currentDetailPayload.school}?`
+                            : 'Hapus jadwal ini?';
+                        if (window.confirm(confirmMessage)) {
+                            deleteForm.submit();
+                        }
+                    });
+                }
             }
         });
     </script>

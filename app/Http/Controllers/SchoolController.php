@@ -432,6 +432,7 @@ class SchoolController extends Controller
             'notes' => $schedule->notes,
             'schedule_id' => $schedule->id,
             'pic' => $school->pic,
+            'delete_url' => route('schedule.destroy', $schedule),
         ];
     }
 }

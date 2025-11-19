@@ -56,7 +56,12 @@ $navItems = [
 ];
 @endphp
 
-<aside class="sidebar">
+<button type="button" class="sidebar-toggle" aria-label="Buka menu" data-sidebar-toggle>
+    <span></span>
+    <span></span>
+    <span></span>
+</button>
+<aside class="sidebar" data-sidebar>
     <div class="brand">
         SchoolVisit<br><span>Schedule</span>
     </div>
@@ -86,3 +91,55 @@ $navItems = [
         Terakhir diperbarui {{ now()->format('d M Y') }}
     </div>
 </aside>
+<div class="sidebar-overlay" data-sidebar-overlay></div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.querySelector('[data-sidebar]');
+        const toggle = document.querySelector('[data-sidebar-toggle]');
+        const overlay = document.querySelector('[data-sidebar-overlay]');
+
+        if (!sidebar || !toggle) {
+            return;
+        }
+
+        const closeOnMobile = () => window.innerWidth <= 1024;
+
+        const setOpenState = (isOpen) => {
+            sidebar.classList.toggle('is-open', isOpen);
+            toggle.classList.toggle('is-active', isOpen);
+            if (overlay) {
+                overlay.classList.toggle('is-visible', isOpen);
+            }
+            document.body.classList.toggle('sidebar-open', isOpen);
+        };
+
+        toggle.addEventListener('click', () => {
+            const shouldOpen = !sidebar.classList.contains('is-open');
+            setOpenState(shouldOpen);
+        });
+
+        if (overlay) {
+            overlay.addEventListener('click', () => setOpenState(false));
+        }
+
+        sidebar.querySelectorAll('.nav-link').forEach((link) => {
+            link.addEventListener('click', () => {
+                if (closeOnMobile()) {
+                    setOpenState(false);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                setOpenState(false);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024 && sidebar.classList.contains('is-open')) {
+                setOpenState(false);
+            }
+        });
+    });
+</script>

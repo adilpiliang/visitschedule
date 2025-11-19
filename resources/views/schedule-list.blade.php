@@ -49,6 +49,7 @@
                         <span>Jadwal kunjungan sekolah</span>
                     </div>
                 </div>
+                <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -74,7 +75,7 @@
                             <td>{{ $schedule->notes ?? '-' }}</td>
                             <td>
                                 @if ($schedule->status !== 'completed')
-                                <form method="POST" action="{{ route('schedule.complete', $schedule) }}">
+                                <form method="POST" action="{{ route('schedule.complete', $schedule) }}" data-complete-confirm>
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="button-primary button-small">Selesaikan Tugas</button>
@@ -91,13 +92,24 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
                 <div class="pagination-wrapper">
                     {{ $schedules->links() }}
                 </div>
             </section>
         </main>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-complete-confirm]').forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    if (!window.confirm('Apakah kamu yakin tugas sudah terselesaikan?')) {
+                        event.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
-

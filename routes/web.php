@@ -11,6 +11,7 @@ Route::get('/schools/{school}', [SchoolController::class, 'show'])->name('school
 Route::view('/login', 'login')->name('login');
 Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
 Route::post('/schedule', [ScheduleController::class, 'store'])->name('schedule.store');
+Route::delete('/schedule/{schedule}', [ScheduleController::class, 'destroy'])->name('schedule.destroy');
 Route::get('/jadwal', [ScheduleController::class, 'list'])->name('schedule.list');
 Route::get('/pic', [ScheduleController::class, 'pic'])->name('schedule.pic');
 Route::patch('/schedule/{schedule}/complete', [ScheduleController::class, 'complete'])->name('schedule.complete');
