@@ -112,6 +112,7 @@
                             <th>Kontak</th>
                             <th>Jadwal</th>
                             <th>Status</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -167,6 +168,13 @@
                             </td>
                             <td>
                                 <span class="badge {{ $school->status_badge_class }}">{{ $school->status ?? '-' }}</span>
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ route('schools.destroy', $school) }}" data-school-delete-form data-school-name="{{ $school->name }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="button-danger button-small">Hapus</button>
+                                </form>
                             </td>
 
                         </tr>
@@ -658,6 +666,16 @@
                     });
                 }
             }
+
+            document.querySelectorAll('[data-school-delete-form]').forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    const schoolName = form.dataset.schoolName || 'sekolah ini';
+                    const message = `Hapus data ${schoolName}? Seluruh jadwal yang terkait juga akan dihapus.`;
+                    if (!window.confirm(message)) {
+                        event.preventDefault();
+                    }
+                });
+            });
         });
     </script>
 </body>

@@ -8,6 +8,7 @@ Route::view('/', 'welcome')->name('dashboard');
 Route::get('/schools', [SchoolController::class, 'index'])->name('schools.index');
 Route::post('/schools', [SchoolController::class, 'store'])->name('schools.store');
 Route::get('/schools/{school}', [SchoolController::class, 'show'])->name('schools.show');
+Route::delete('/schools/{school}', [SchoolController::class, 'destroy'])->name('schools.destroy');
 Route::view('/login', 'login')->name('login');
 Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
 Route::post('/schedule', [ScheduleController::class, 'store'])->name('schedule.store');

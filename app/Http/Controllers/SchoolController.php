@@ -6,6 +6,7 @@ use App\Models\School;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -197,6 +198,17 @@ class SchoolController extends Controller
             'oldSchoolName' => $this->resolveOldSchoolName($request, $schools),
             'openCreateSchoolModal' => $this->shouldOpenCreateSchoolModal(),
         ]);
+    }
+
+    /**
+     * Remove the specified school from storage.
+     */
+    public function destroy(School $school): RedirectResponse
+    {
+        $schoolName = $school->name ?? 'sekolah';
+        $school->delete();
+
+        return back()->with('status', sprintf('Data %s berhasil dihapus beserta seluruh jadwalnya.', $schoolName));
     }
 
     protected function applyScope(Builder $query, string $scope): void
