@@ -439,12 +439,14 @@ class SchoolController extends Controller
 
         return [
             'school' => $school->name,
+            'school_id' => $school->id,
             'visit_date' => $schedule->visit_date,
             'visit_time' => $schedule->visit_time,
             'notes' => $schedule->notes,
             'schedule_id' => $schedule->id,
             'pic' => $school->pic,
             'delete_url' => route('schedule.destroy', $schedule),
+            'update_url' => route('schedule.update', $schedule),
         ];
     }
 }

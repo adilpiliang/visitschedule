@@ -37,11 +37,11 @@
                     <span>{{ $card['description'] }}</span>
                 </a>
                 @endforeach
-                <article class="card card-selectable">
+                <!-- <article class="card card-selectable">
                     <h3>Terjadwal</h3>
                     <strong>34</strong>
                     <span>jadwal kunjungan yang telah dibuat</span>
-                </article>
+                </article> -->
                 <article class="card card-summary">
                     <h3>Total Sekolah</h3>
                     <strong>{{ $totalSchools ?? $schools->count() }}</strong>
@@ -194,13 +194,14 @@
         <div class="modal-window" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-title">
             <div class="modal-header">
                 <div>
-                    <p class="modal-label">Tambah Jadwal</p>
+                    <p class="modal-label" data-modal-label>Tambah Jadwal</p>
                     <h2 id="schedule-modal-title" class="modal-title" data-modal-school>{{ $oldSchoolName ?? 'Pilih sekolah' }}</h2>
                 </div>
                 <button class="modal-close" type="button" aria-label="Tutup" data-modal-close>&times;</button>
             </div>
-            <form method="POST" action="{{ route('schedule.store') }}" class="modal-form">
+            <form method="POST" action="{{ route('schedule.store') }}" class="modal-form" data-schedule-form>
                 @csrf
+                <input type="hidden" name="_method" value="POST" data-method-field>
                 <input type="hidden" name="school_id" value="{{ old('school_id') }}">
 
                 <div class="form-group">
@@ -449,6 +450,7 @@
             });
 
             const scheduleModal = document.querySelector('[data-schedule-modal]');
+            let openScheduleForm = null;
             if (scheduleModal) {
                 const schoolInput = scheduleModal.querySelector('input[name="school_id"]');
                 const schoolNameLabel = scheduleModal.querySelector('[data-modal-school]');
@@ -456,9 +458,15 @@
                 const visitTimeInput = scheduleModal.querySelector('input[name="visit_time"]');
                 const picSelect = scheduleModal.querySelector('select[name="pic"]');
                 const notesInput = scheduleModal.querySelector('textarea[name="notes"]');
+                const scheduleForm = scheduleModal.querySelector('[data-schedule-form]');
+                const methodField = scheduleModal.querySelector('[data-method-field]');
+                const modalLabel = scheduleModal.querySelector('[data-modal-label]');
+                const submitButton = scheduleModal.querySelector('.modal-actions .button-primary');
                 const openButtons = document.querySelectorAll('.schedule-button');
                 const hasValidationErrors = scheduleModal.dataset.openOnLoad === 'true';
+                const defaultAction = scheduleForm ? scheduleForm.getAttribute('action') : '';
                 let shouldResetFields = !hasValidationErrors;
+
                 const setPicValue = (value) => {
                     if (!picSelect) {
                         return;
@@ -474,18 +482,33 @@
                     }
                 };
 
-                const openModal = (schoolId, schoolName, schoolPic) => {
-                    if (shouldResetFields) {
-                        visitDateInput.value = '';
-                        visitTimeInput.value = '';
-                        if (picSelect) {
-                            picSelect.selectedIndex = 0;
-                        }
-                        notesInput.value = '';
+                const setFormMode = (mode, payload) => {
+                    if (!scheduleForm || !methodField) {
+                        return;
                     }
+                    if (mode === 'edit' && payload?.update_url) {
+                        scheduleForm.action = payload.update_url;
+                        methodField.value = 'PATCH';
+                        if (modalLabel) modalLabel.textContent = 'Edit Jadwal';
+                        if (submitButton) submitButton.textContent = 'Perbarui Jadwal';
+                    } else {
+                        scheduleForm.action = defaultAction;
+                        methodField.value = 'POST';
+                        if (modalLabel) modalLabel.textContent = 'Tambah Jadwal';
+                        if (submitButton) submitButton.textContent = 'Simpan Jadwal';
+                    }
+                };
+
+                const openModal = (schoolId, schoolName, schoolPic, payload = null) => {
+                    if (shouldResetFields) {
+                        visitDateInput.value = payload?.visit_date || '';
+                        visitTimeInput.value = payload?.visit_time ? payload.visit_time.slice(0, 5) : '';
+                        notesInput.value = payload?.notes || '';
+                        setPicValue(payload?.pic || schoolPic);
+                    }
+                    setFormMode(payload ? 'edit' : 'create', payload);
                     schoolInput.value = schoolId;
                     schoolNameLabel.textContent = schoolName;
-                    setPicValue(schoolPic);
                     scheduleModal.classList.add('is-visible');
                     visitDateInput.focus();
                     shouldResetFields = true;
@@ -520,6 +543,18 @@
                 if (hasValidationErrors) {
                     scheduleModal.classList.add('is-visible');
                 }
+
+                openScheduleForm = (payload) => {
+                    if (!payload || !payload.school_id) {
+                        return;
+                    }
+                    openModal(
+                        payload.school_id,
+                        payload.school || 'Sekolah',
+                        payload.pic || '',
+                        payload
+                    );
+                };
             }
 
             const createSchoolModal = document.querySelector('[data-create-school-modal]');
@@ -662,6 +697,16 @@
                             : 'Hapus jadwal ini?';
                         if (window.confirm(confirmMessage)) {
                             deleteForm.submit();
+                        }
+                    });
+                }
+
+                const editButton = detailModal.querySelector('[data-detail-edit]');
+                if (editButton) {
+                    editButton.addEventListener('click', () => {
+                        if (typeof openScheduleForm === 'function' && currentDetailPayload) {
+                            detailModal.classList.remove('is-visible');
+                            openScheduleForm(currentDetailPayload);
                         }
                     });
                 }

@@ -64,14 +64,44 @@ class ScheduleController extends Controller
      */
     public function list(): View
     {
-        $schedules = Schedule::query()
+        $today = Carbon::today();
+        $weekStart = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        $weekEnd = Carbon::now()->endOfWeek(Carbon::SUNDAY);
+
+        $allSchedules = Schedule::query()
             ->with('school:id,name,kota,pic')
+            ->where('status', '!=', 'completed')
+            ->orderBy('visit_date')
+            ->orderBy('visit_time')
+            ->get();
+
+        $weekSchedules = Schedule::query()
+            ->with('school:id,name,kota,pic')
+            ->where('status', '!=', 'completed')
+            ->whereBetween('visit_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->orderBy('visit_date')
+            ->orderBy('visit_time')
+            ->get();
+
+        $completedSchedules = Schedule::query()
+            ->with('school:id,name,kota,pic')
+            ->where('status', 'completed')
+            ->orderByDesc('updated_at')
             ->orderByDesc('visit_date')
             ->orderByDesc('visit_time')
-            ->paginate(15);
+            ->get();
+
+        $stats = [
+            'all' => $allSchedules->count(),
+            'week' => $weekSchedules->count(),
+            'completed' => $completedSchedules->count(),
+        ];
 
         return view('schedule-list', [
-            'schedules' => $schedules,
+            'allSchedules' => $allSchedules,
+            'weekSchedules' => $weekSchedules,
+            'completedSchedules' => $completedSchedules,
+            'stats' => $stats,
         ]);
     }
 

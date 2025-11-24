@@ -15,7 +15,7 @@
             <main class="content-area">
                 <header class="header">
                     <div>
-                        <h1>Selamat datang, {{ auth()->user()->name ?? 'Pengguna' }}!</h1>
+                        <h1>Selamat datang, {{ session('user.username') ?? 'Pengguna' }}!</h1>
                         <p>Mari kita awali dengan basmalah</p>
                     </div>
                     <!-- <button class="cta-button">

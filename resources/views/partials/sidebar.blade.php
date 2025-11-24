@@ -1,15 +1,16 @@
 @php
 $navItems = [
     [
-        'label' => 'Dashboard',
-        'route' => 'dashboard',
-        'match' => ['dashboard'],
+        'label' => 'Jadwal',
+        'route' => 'schedule.list',
+        'match' => ['schedule.list'],
         'icon' => <<<'SVG'
             <svg viewBox="0 0 24 24" fill="none">
-                <path d="M4 6h16M4 12h16M4 18h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                <path d="M5 5h14v14H5zM5 9h14M9 5v14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
         SVG,
     ],
+    
     [
         'label' => 'Kalender',
         'route' => 'schedule',
@@ -18,16 +19,6 @@ $navItems = [
         'icon' => <<<'SVG'
             <svg viewBox="0 0 24 24" fill="none">
                 <path d="M7 4h10a2 2 0 0 1 2 2v12l-7-3-7 3V6a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
-            </svg>
-        SVG,
-    ],
-    [
-        'label' => 'Jadwal',
-        'route' => 'schedule.list',
-        'match' => ['schedule.list'],
-        'icon' => <<<'SVG'
-            <svg viewBox="0 0 24 24" fill="none">
-                <path d="M5 5h14v14H5zM5 9h14M9 5v14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
         SVG,
     ],
@@ -54,6 +45,8 @@ $navItems = [
         SVG,
     ],
 ];
+
+$currentUser = session('user');
 @endphp
 
 <button type="button" class="sidebar-toggle" aria-label="Buka menu" data-sidebar-toggle>
@@ -86,9 +79,16 @@ $navItems = [
         @endforeach
     </div>
     <div class="sidebar-footer">
-        Masuk sebagai <strong>{{ auth()->user()->name ?? 'Pengguna' }}</strong>
+        Masuk sebagai <strong>{{ $currentUser['username'] ?? 'Pengguna' }}</strong>
         <br>
         Terakhir diperbarui {{ now()->format('d M Y') }}
+        <form method="POST" action="{{ route('logout') }}" style="margin-top: 12px;">
+            @csrf
+            <button type="submit" class="button-secondary" style="width: 100%;">Keluar</button>
+        </form>
+        <div style="margin-top: 12px; font-size: 12px; color: #6b7280;">
+            &copy; fadil - 24 November 2025
+        </div>
     </div>
 </aside>
 <div class="sidebar-overlay" data-sidebar-overlay></div>
