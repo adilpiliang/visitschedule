@@ -54,7 +54,6 @@
                         <input type="checkbox" id="remember" name="remember">
                         <span>Ingat saya</span>
                     </label>
-                    <a class="link" href="#">Lupa kata sandi?</a>
                 </div>
 
                 <button type="submit" class="primary-button">
@@ -63,7 +62,7 @@
             </form>
 
             <div class="auth-footer">
-                <a href="#">Hubungi Admin</a>, untuk meminta akun
+                <a href="http://wa.me/81288822790">Hubungi Admin</a>, untuk meminta akun
                 <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
                     &copy; fadil - 24 November 2025
                 </div>
