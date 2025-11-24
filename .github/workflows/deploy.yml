@@ -31,14 +31,14 @@ jobs:
             rm -rf node_modules
           fi
 
-           - name: Deploy to Hostinger via FTP
+      - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /public_html/
-          local-dir: ./
+          local-dir: ./ 
           exclude: |
             **/.git/**
             **/.github/**
@@ -48,4 +48,3 @@ jobs:
             **/storage/logs/**
             **/tests/**
             **/.env
-
