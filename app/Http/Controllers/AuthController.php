@@ -57,7 +57,7 @@ class AuthController extends Controller
             Cookie::queue(Cookie::forget('remember_user'));
         }
 
-        return redirect()->intended(route('schedule'));
+        return redirect()->intended(route('schedule-list'));
     }
 
     public function logout(Request $request)
